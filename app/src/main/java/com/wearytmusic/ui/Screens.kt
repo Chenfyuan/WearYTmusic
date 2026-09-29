@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.itemsIndexed
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -56,20 +58,37 @@ fun WearApp(vm: MainViewModel) {
         val nav = rememberSwipeDismissableNavController()
         SwipeDismissableNavHost(navController = nav, startDestination = "search") {
             composable("search") {
-                SearchScreen(vm, onPlay = { i ->
-                    vm.playFrom(i)
-                    nav.navigate("player")
-                }, onNowPlaying = { nav.navigate("player") })
+                val state by vm.search.collectAsStateWithLifecycle()
+                val now by vm.now.collectAsStateWithLifecycle()
+                SearchScreen(
+                    state = state,
+                    now = now,
+                    onQueryChange = vm::onQueryChange,
+                    onSearch = vm::runSearch,
+                    onPlay = { i ->
+                        vm.playFrom(i)
+                        nav.navigate("player")
+                    },
+                    onNowPlaying = { nav.navigate("player") },
+                )
             }
-            composable("player") { PlayerScreen(vm) }
+            composable("player") {
+                val now by vm.now.collectAsStateWithLifecycle()
+                PlayerScreen(now, vm::previous, vm::togglePlay, vm::next)
+            }
         }
     }
 }
 
 @Composable
-private fun SearchScreen(vm: MainViewModel, onPlay: (Int) -> Unit, onNowPlaying: () -> Unit) {
-    val state by vm.search.collectAsStateWithLifecycle()
-    val now by vm.now.collectAsStateWithLifecycle()
+fun SearchScreen(
+    state: SearchState,
+    now: NowPlaying,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onPlay: (Int) -> Unit,
+    onNowPlaying: () -> Unit,
+) {
     val listState = rememberScalingLazyListState()
 
     Scaffold(
@@ -80,18 +99,20 @@ private fun SearchScreen(vm: MainViewModel, onPlay: (Int) -> Unit, onNowPlaying:
         ScalingLazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = listState,
+            contentPadding = PaddingValues(top = 36.dp, bottom = 32.dp, start = 8.dp, end = 8.dp),
+            autoCentering = AutoCenteringParams(itemIndex = 0),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             item {
                 BasicTextField(
                     value = state.query,
-                    onValueChange = vm::onQueryChange,
+                    onValueChange = onQueryChange,
                     singleLine = true,
                     textStyle = MaterialTheme.typography.body1.copy(color = MaterialTheme.colors.onBackground),
                     cursorBrush = SolidColor(MaterialTheme.colors.primary),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { vm.runSearch() }),
+                    keyboardActions = KeyboardActions(onSearch = { onSearch() }),
                     modifier = Modifier
                         .fillMaxWidth(0.85f)
                         .border(1.dp, MaterialTheme.colors.primary, RoundedCornerShape(50))
@@ -148,8 +169,7 @@ private fun SearchScreen(vm: MainViewModel, onPlay: (Int) -> Unit, onNowPlaying:
 }
 
 @Composable
-private fun PlayerScreen(vm: MainViewModel) {
-    val now by vm.now.collectAsStateWithLifecycle()
+fun PlayerScreen(now: NowPlaying, onPrevious: () -> Unit, onTogglePlay: () -> Unit, onNext: () -> Unit) {
     Box(Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
         now.artworkUrl?.let {
             AsyncImage(
@@ -184,10 +204,10 @@ private fun PlayerScreen(vm: MainViewModel) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Button(onClick = vm::previous, colors = ButtonDefaults.iconButtonColors(), modifier = Modifier.size(40.dp)) {
+                Button(onClick = onPrevious, colors = ButtonDefaults.iconButtonColors(), modifier = Modifier.size(40.dp)) {
                     Icon(painterResource(R.drawable.ic_prev), "上一首")
                 }
-                Button(onClick = vm::togglePlay, modifier = Modifier.size(52.dp)) {
+                Button(onClick = onTogglePlay, modifier = Modifier.size(52.dp)) {
                     if (now.buffering && !now.isPlaying) {
                         CircularProgressIndicator(Modifier.size(24.dp))
                     } else {
@@ -197,7 +217,7 @@ private fun PlayerScreen(vm: MainViewModel) {
                         )
                     }
                 }
-                Button(onClick = vm::next, colors = ButtonDefaults.iconButtonColors(), modifier = Modifier.size(40.dp)) {
+                Button(onClick = onNext, colors = ButtonDefaults.iconButtonColors(), modifier = Modifier.size(40.dp)) {
                     Icon(painterResource(R.drawable.ic_next), "下一首")
                 }
             }

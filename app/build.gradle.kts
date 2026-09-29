@@ -26,9 +26,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    testOptions.unitTests.isIncludeAndroidResources = true
     testOptions {
         unitTests.all {
             if (project.hasProperty("liveTests")) it.systemProperty("liveTests", "1")
+            it.systemProperty("roborazzi.test.record", "true")
             it.testLogging.showStandardStreams = true
         }
     }
@@ -65,4 +67,9 @@ dependencies {
     implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.26.5")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.26.0")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.26.0")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
