@@ -15,6 +15,7 @@ data class Track(
     val title: String,
     val artist: String,
     val artworkUrl: String?,
+    val durationSec: Long = 0,
 )
 
 object MusicRepository {
@@ -47,7 +48,7 @@ object MusicRepository {
             .filterIsInstance<StreamInfoItem>()
             .mapNotNull { item ->
                 val id = videoIdOf(item.url) ?: return@mapNotNull null
-                Track(id, item.name, item.uploaderName.orEmpty(), item.thumbnails.lastOrNull()?.url)
+                Track(id, item.name, item.uploaderName.orEmpty(), item.thumbnails.lastOrNull()?.url, item.duration.coerceAtLeast(0))
             }
     }
 

@@ -65,8 +65,11 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.26.5")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
     testImplementation("org.robolectric:robolectric:4.13")
     testImplementation("io.github.takahirom.roborazzi:roborazzi:1.26.0")
     testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.26.0")

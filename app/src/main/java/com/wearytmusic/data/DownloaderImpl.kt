@@ -1,18 +1,14 @@
 package com.wearytmusic.data
 
-import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.schabi.newpipe.extractor.downloader.Downloader
 import org.schabi.newpipe.extractor.downloader.Request
 import org.schabi.newpipe.extractor.downloader.Response
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException
-import java.util.concurrent.TimeUnit
 
 /** OkHttp-backed [Downloader] required by NewPipeExtractor. */
 class DownloaderImpl : Downloader() {
-    private val client = OkHttpClient.Builder()
-        .readTimeout(30, TimeUnit.SECONDS)
-        .build()
+    private val client = Http.client
 
     override fun execute(request: Request): Response {
         val method = request.httpMethod()
