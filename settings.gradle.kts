@@ -12,13 +12,23 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
-        maven("https://maven.aliyun.com/repository/google")
+        // NewPipeExtractor is only on JitPack. Gradle doesn't fall through on 5xx errors, so
+        // each repository is restricted to the groups it actually serves.
+        exclusiveContent {
+            forRepository { maven("https://jitpack.io") }
+            filter { includeGroup("com.github.TeamNewPipe") }
+        }
+        maven("https://maven.aliyun.com/repository/google") { googleGroups() }
+        google { googleGroups() }
         maven("https://maven.aliyun.com/repository/public")
-        google()
         mavenCentral()
-        // NewPipeExtractor is only published on JitPack (not mirrored by Aliyun).
-        maven("https://jitpack.io")
     }
+}
+
+fun MavenArtifactRepository.googleGroups() = content {
+    includeGroupByRegex("com\\.android.*")
+    includeGroupByRegex("com\\.google\\.android.*")
+    includeGroupByRegex("androidx.*")
 }
 rootProject.name = "WearYTmusic"
 include(":app")
